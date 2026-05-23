@@ -1,0 +1,1591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Laostars Pattern Explorer — Intercontinental Passage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+/* ============================================================
+   THEME — Binance-style, matches xrate.html
+   ============================================================ */
+:root {
+  --bg:           #0b0e11;
+  --bg-elev:     #161a1e;
+  --bg-elev-2:   #1e2329;
+  --border:      #2b3139;
+  --text:        #eaecef;
+  --text-dim:    #848e9c;
+  --text-dim-2:  #5e6673;
+  --primary:     #f0b90b;
+  --primary-d:  #d9a309;
+  --green:       #0ecb81;
+  --red:         #f6465d;
+  --orange:      #ff8a00;
+  --yellow:      #ffd540;
+  --blue:        #4d8efa;
+  --radius:      10px;
+  --radius-sm:   6px;
+  --shadow:      0 4px 20px rgba(0,0,0,0.4);
+  --t:           160ms cubic-bezier(.4,0,.2,1);
+}
+
+[data-theme="light"] {
+  --bg:           #fafafa;
+  --bg-elev:      #ffffff;
+  --bg-elev-2:    #f5f5f5;
+  --border:       #e6e8eb;
+  --text:         #1e2329;
+  --text-dim:     #707a8a;
+  --text-dim-2:   #a0a8b3;
+  --primary:      #c99400;
+  --primary-d:    #a87a00;
+  --green:        #0ba26a;
+  --red:          #d93545;
+  --orange:       #d97400;
+  --yellow:       #b89000;
+  --blue:         #2266e0;
+  --shadow:       0 4px 20px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  transition: background var(--t), color var(--t);
+}
+
+body {
+  min-height: 100vh;
+  padding-bottom: 60px;
+}
+
+.app {
+  max-width: 32rem;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0 12px;
+  margin-bottom: 16px;
+  transition: background var(--t), border-color var(--t);
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.15;
+}
+
+.brand-name {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.brand-tool {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-tool::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--primary);
+  box-shadow: 0 0 8px var(--primary);
+}
+
+.theme-toggle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all var(--t);
+}
+
+.theme-toggle:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* ============================================================
+   DATA STATUS BAR
+   ============================================================ */
+.data-status {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  transition: background var(--t), border-color var(--t);
+}
+
+.data-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.data-status-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+}
+
+.data-status-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.data-status-strength {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.strength-bars {
+  display: flex;
+  gap: 2px;
+}
+
+.strength-bar {
+  width: 8px;
+  height: 12px;
+  background: var(--border);
+  border-radius: 1px;
+  transition: background var(--t);
+}
+
+.strength-bar.on { background: currentColor; }
+
+.strength-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.tier-insufficient { color: var(--red); }
+.tier-very-limited { color: var(--orange); }
+.tier-limited      { color: var(--yellow); }
+.tier-adequate     { color: var(--green); }
+.tier-good         { color: var(--green); }
+
+.data-status-message {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 6px;
+  line-height: 1.4;
+}
+
+.data-load-btn {
+  background: var(--primary);
+  color: #1a1a1a;
+  border: none;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--t);
+  letter-spacing: 0.03em;
+}
+
+.data-load-btn:hover { background: var(--primary-d); }
+
+.data-load-btn.secondary {
+  background: var(--bg-elev-2);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+.data-load-btn.secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.file-input { display: none; }
+
+/* ============================================================
+   TABS
+   ============================================================ */
+.tabs {
+  display: flex;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px;
+  margin-bottom: 16px;
+  transition: background var(--t), border-color var(--t);
+}
+
+.tab {
+  flex: 1;
+  padding: 9px 8px;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--t);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.tab:hover { color: var(--text); }
+
+.tab.active {
+  background: var(--bg-elev-2);
+  color: var(--primary);
+}
+
+.tab-icon { font-size: 13px; }
+
+/* ============================================================
+   CARDS
+   ============================================================ */
+.card {
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px;
+  margin-bottom: 12px;
+  transition: background var(--t), border-color var(--t);
+}
+
+.card-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card-title-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  letter-spacing: 0.04em;
+}
+
+/* ============================================================
+   PREDICT TAB
+   ============================================================ */
+.presets {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 2px;
+}
+
+.presets::-webkit-scrollbar { display: none; }
+
+.preset-chip {
+  background: var(--bg-elev-2);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  padding: 6px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--t);
+}
+
+.preset-chip:hover {
+  border-color: var(--primary);
+  color: var(--text);
+}
+
+.preset-chip.active {
+  background: var(--primary);
+  color: #1a1a1a;
+  border-color: var(--primary);
+}
+
+.weights-toggle {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 8px;
+  transition: color var(--t);
+}
+
+.weights-toggle:hover { color: var(--primary); }
+
+.weights-toggle::before {
+  content: "▸";
+  transition: transform var(--t);
+  font-size: 9px;
+}
+
+.weights-toggle.open::before { transform: rotate(90deg); }
+
+.weights-panel {
+  display: none;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+
+.weights-panel.open { display: block; }
+
+.slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.slider-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  min-width: 60px;
+}
+
+.slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.slider-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 36px;
+  text-align: right;
+}
+
+.pred-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--text-dim);
+  font-size: 13px;
+}
+
+.pred-empty-icon {
+  font-size: 32px;
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
+/* Prediction list */
+.pred-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pred-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background var(--t);
+  border: 1px solid transparent;
+}
+
+.pred-row:hover {
+  border-color: var(--border);
+}
+
+.pred-rank {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-dim);
+  min-width: 14px;
+}
+
+.pred-number {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.05em;
+  flex: 1;
+}
+
+.pred-prob {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--primary);
+  min-width: 64px;
+  text-align: right;
+}
+
+.pred-row.top-1 .pred-number { color: var(--primary); }
+
+.pred-detail {
+  display: none;
+  padding: 8px 10px;
+  margin-top: -4px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  border-top: none;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.pred-detail.open { display: block; }
+
+.pred-detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.warn-tag {
+  display: inline-block;
+  background: rgba(246, 70, 93, 0.15);
+  color: var(--red);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.06em;
+  margin-left: 6px;
+}
+
+/* ============================================================
+   HISTORY TAB
+   ============================================================ */
+.history-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.search-input {
+  flex: 1;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
+  color: var(--text);
+  font-size: 12px;
+  font-family: inherit;
+  transition: border-color var(--t);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+.history-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.history-table th {
+  text-align: left;
+  padding: 8px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+}
+
+.history-table td {
+  padding: 8px 6px;
+  font-family: 'JetBrains Mono', monospace;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.history-table tr:last-child td { border-bottom: none; }
+
+.history-table .col-d5 { color: var(--primary); font-weight: 700; }
+.history-table .col-d3 { color: var(--text); }
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  gap: 8px;
+}
+
+.page-btn {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all var(--t);
+}
+
+.page-btn:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 11px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ============================================================
+   STATS TAB
+   ============================================================ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.stat-tile {
+  background: var(--bg-elev-2);
+  padding: 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.stat-tile-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 4px;
+}
+
+.stat-tile-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.stat-tile-sub {
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 2px;
+}
+
+/* Heatmap */
+.heatmap-grid {
+  display: grid;
+  grid-template-columns: 30px repeat(10, 1fr);
+  gap: 2px;
+  font-size: 9px;
+}
+
+.heatmap-header,
+.heatmap-row-label {
+  text-align: center;
+  color: var(--text-dim);
+  padding: 4px 0;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.heatmap-cell {
+  padding: 6px 0;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 2px;
+  color: var(--text);
+}
+
+/* Hot/Cold lists */
+.hc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.hc-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 5px 8px;
+  background: var(--bg-elev-2);
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+}
+
+.hc-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.hc-meta {
+  font-size: 10px;
+  color: var(--text-dim);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.hc-row.hot .hc-num { color: var(--red); }
+.hc-row.cold .hc-num { color: var(--blue); }
+
+/* ============================================================
+   FOOTER (always-visible disclaimer)
+   ============================================================ */
+.footer {
+  margin-top: 24px;
+  padding: 12px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 10px;
+  color: var(--text-dim);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.footer strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ============================================================
+   UTIL
+   ============================================================ */
+.hidden { display: none !important; }
+
+.tab-panel {
+  animation: fadeIn 200ms ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive tweaks */
+@media (max-width: 360px) {
+  .app { padding: 0 12px; }
+  .brand-tool { font-size: 14px; }
+  .heatmap-grid { font-size: 8px; }
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<div class="app">
+
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-row">
+      <div class="brand">
+        <div class="brand-name">Intercontinental Passage</div>
+        <div class="brand-tool">Laostars Pattern Explorer</div>
+      </div>
+      <button class="theme-toggle" id="themeToggle" title="Toggle theme">🌙</button>
+    </div>
+
+    <div class="data-status" id="dataStatus">
+      <div class="data-status-row">
+        <div style="flex: 1; min-width: 0;">
+          <div class="data-status-label">Dataset</div>
+          <div class="data-status-value" id="datasetCount">No data loaded</div>
+          <div class="data-status-strength tier-insufficient" id="strengthRow" style="display:none;">
+            <div class="strength-bars" id="strengthBars">
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+              <div class="strength-bar"></div>
+            </div>
+            <div class="strength-label" id="strengthLabel">—</div>
+          </div>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-end;">
+          <button class="data-load-btn" id="refreshBtn">↻ Refresh</button>
+          <button class="data-load-btn secondary" id="uploadFallbackBtn" style="font-size:10px; padding:5px 10px;">Upload file</button>
+          <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls" />
+        </div>
+      </div>
+      <div class="data-status-message" id="statusMessage">
+        Loading latest draws…
+      </div>
+    </div>
+  </header>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <button class="tab active" data-tab="predict">
+      <span class="tab-icon">🎯</span>Predict
+    </button>
+    <button class="tab" data-tab="history">
+      <span class="tab-icon">📊</span>History
+    </button>
+    <button class="tab" data-tab="stats">
+      <span class="tab-icon">📈</span>Stats
+    </button>
+  </div>
+
+  <!-- ============================================================
+       PREDICT TAB
+       ============================================================ -->
+  <div class="tab-panel" id="tab-predict">
+
+    <div class="card" id="weightsCard">
+      <div class="card-title">
+        Weighting Strategy
+        <span class="card-title-tag" id="presetActive">BALANCED</span>
+      </div>
+
+      <div class="presets">
+        <button class="preset-chip active" data-preset="balanced">Balanced</button>
+        <button class="preset-chip" data-preset="frequency">Trust Frequency</button>
+        <button class="preset-chip" data-preset="gaps">Trust Gaps</button>
+        <button class="preset-chip" data-preset="markov">Trust Markov</button>
+        <button class="preset-chip" data-preset="custom">Custom</button>
+      </div>
+
+      <button class="weights-toggle" id="weightsToggle">Adjust weights</button>
+      <div class="weights-panel" id="weightsPanel">
+        <div class="slider-row">
+          <span class="slider-label">Frequency</span>
+          <input type="range" class="slider" id="wFreq" min="0" max="100" value="50" />
+          <span class="slider-value" id="wFreqVal">50%</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Gap</span>
+          <input type="range" class="slider" id="wGap" min="0" max="100" value="30" />
+          <span class="slider-value" id="wGapVal">30%</span>
+        </div>
+        <div class="slider-row">
+          <span class="slider-label">Markov</span>
+          <input type="range" class="slider" id="wMarkov" min="0" max="100" value="20" />
+          <span class="slider-value" id="wMarkovVal">20%</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="predictions">
+      <div class="pred-empty">
+        <div class="pred-empty-icon">📂</div>
+        Loading latest draws…
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================================
+       HISTORY TAB
+       ============================================================ -->
+  <div class="tab-panel hidden" id="tab-history">
+    <div class="card">
+      <div class="card-title">All Draws</div>
+      <div class="history-controls">
+        <input type="text" class="search-input" id="historySearch" placeholder="Search by number or date..." />
+      </div>
+      <div id="historyContent">
+        <div class="pred-empty">
+          <div class="pred-empty-icon">📊</div>
+          Loading latest draws…
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       STATS TAB
+       ============================================================ -->
+  <div class="tab-panel hidden" id="tab-stats">
+    <div id="statsContent">
+      <div class="card">
+        <div class="pred-empty">
+          <div class="pred-empty-icon">📈</div>
+          Loading latest draws…
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DISCLAIMER FOOTER -->
+  <div class="footer">
+    <strong>For entertainment only.</strong> Statistical patterns from historical draws.<br>
+    Lottery outcomes are independent random events — no model can reliably predict them.<br>
+    <span style="opacity:0.7; font-size:9px; display:inline-block; margin-top:6px;">Powered by Intercontinental Passage · Data updates weekly</span>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = {
+  draws: [],          // [{lotto_date, digit5, digit4, digit3, digit2_top, digit2_bottom}, ...]
+  weights: { freq: 0.50, gap: 0.30, markov: 0.20 },
+  activePreset: 'balanced',
+  activeTab: 'predict',
+  history: { page: 1, pageSize: 20, search: '' },
+};
+
+const PRESETS = {
+  balanced:  { freq: 0.50, gap: 0.30, markov: 0.20 },
+  frequency: { freq: 0.80, gap: 0.10, markov: 0.10 },
+  gaps:      { freq: 0.15, gap: 0.70, markov: 0.15 },
+  markov:    { freq: 0.20, gap: 0.20, markov: 0.60 },
+};
+
+const CATEGORIES = [
+  { key: 'digit5',       label: 'digit5',        sub: '5-digit master (00000-99999)', space: 100000, warn: true  },
+  { key: 'digit4',       label: 'digit4',        sub: 'trailing 4 digits',            space: 10000,  warn: true  },
+  { key: 'digit3',       label: 'digit3',        sub: 'trailing 3 digits',            space: 1000,   warn: false },
+  { key: 'digit2_top',   label: 'digit2_top',    sub: 'trailing 2 (เທິ່ງ — upper)',  space: 100,    warn: false },
+  { key: 'digit2_bottom',label: 'digit2_bottom', sub: 'LEADING 2 (ລຸ່ມ — lower)',    space: 100,    warn: false },
+];
+
+/* ============================================================
+   THEME
+   ============================================================ */
+const themeToggle = document.getElementById('themeToggle');
+function applyTheme(t) {
+  document.body.setAttribute('data-theme', t);
+  themeToggle.textContent = t === 'dark' ? '🌙' : '☀️';
+  try { localStorage.setItem('laostars_theme', t); } catch(e) {}
+}
+themeToggle.addEventListener('click', () => {
+  const cur = document.body.getAttribute('data-theme');
+  applyTheme(cur === 'dark' ? 'light' : 'dark');
+});
+try {
+  const saved = localStorage.getItem('laostars_theme');
+  if (saved) applyTheme(saved);
+} catch(e) {}
+
+/* ============================================================
+   TABS
+   ============================================================ */
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const t = btn.dataset.tab;
+    state.activeTab = t;
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b === btn));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('hidden', p.id !== 'tab-' + t));
+    if (t === 'history') renderHistory();
+    if (t === 'stats')   renderStats();
+  });
+});
+
+/* ============================================================
+   DATA LOADING — Google Sheets fetch + upload fallback
+   ============================================================ */
+const GSHEET_ID = '11DAUTvAXm9F5O6dRhOOKcE1mWTL1C9H2RfaRAjIPC0M';
+const GSHEET_TAB = 'draws';
+// Public CSV export endpoint — works for "anyone with link can view" sheets
+const GSHEET_CSV_URL =
+  `https://docs.google.com/spreadsheets/d/${GSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(GSHEET_TAB)}`;
+
+const refreshBtn        = document.getElementById('refreshBtn');
+const uploadFallbackBtn = document.getElementById('uploadFallbackBtn');
+const fileInput         = document.getElementById('fileInput');
+
+// Ingest an array of raw row objects (from CSV or XLSX) into state.draws
+function ingestRows(rows) {
+  const cleaned = [];
+  let invalid = 0;
+  for (const r of rows) {
+    const digit5 = String(r.digit5 || '').trim().padStart(5, '0');
+    if (!/^\d{5}$/.test(digit5)) { invalid++; continue; }
+    const lotto_date = String(r.lotto_date || '').trim().slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(lotto_date)) { invalid++; continue; }
+
+    cleaned.push({
+      lotto_date,
+      digit5,
+      digit4: digit5.slice(-4),
+      digit3: digit5.slice(-3),
+      digit2_top: digit5.slice(-2),
+      digit2_bottom: digit5.slice(0, 2),
+    });
+  }
+  if (!cleaned.length) throw new Error('No valid rows found');
+
+  // Dedupe by date (keep last), then sort ascending
+  const byDate = {};
+  for (const c of cleaned) byDate[c.lotto_date] = c;
+  state.draws = Object.values(byDate).sort((a, b) => a.lotto_date.localeCompare(b.lotto_date));
+
+  updateDataStatus(invalid);
+  if (state.activeTab === 'predict') renderPredictions();
+  if (state.activeTab === 'history') renderHistory();
+  if (state.activeTab === 'stats')   renderStats();
+}
+
+// Minimal CSV parser (handles quoted fields, commas, newlines)
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i], next = text[i+1];
+    if (inQuotes) {
+      if (c === '"' && next === '"') { field += '"'; i++; }
+      else if (c === '"') { inQuotes = false; }
+      else { field += c; }
+    } else {
+      if (c === '"') { inQuotes = true; }
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+      else if (c === '\r') { /* skip */ }
+      else { field += c; }
+    }
+  }
+  if (field.length || row.length) { row.push(field); rows.push(row); }
+  // Convert to objects keyed by header row
+  if (!rows.length) return [];
+  const headers = rows[0].map(h => h.trim());
+  return rows.slice(1)
+    .filter(r => r.length && r.some(v => v.trim() !== ''))
+    .map(r => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = (r[i] || '').trim(); });
+      return obj;
+    });
+}
+
+function setStatusMessage(msg) {
+  document.getElementById('statusMessage').innerHTML = msg;
+}
+
+async function fetchFromSheet() {
+  setStatusMessage('Loading latest draws…');
+  refreshBtn.disabled = true;
+  refreshBtn.textContent = '↻ …';
+  try {
+    const res = await fetch(GSHEET_CSV_URL, { cache: 'no-store' });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    const rows = parseCSV(text);
+    if (!rows.length) throw new Error('Sheet returned no rows');
+    ingestRows(rows);
+  } catch (err) {
+    setStatusMessage(
+      `Could not load live data (${err.message}). ` +
+      `You can use <strong>Upload file</strong> instead, or try Refresh again.`
+    );
+  } finally {
+    refreshBtn.disabled = false;
+    refreshBtn.textContent = '↻ Refresh';
+  }
+}
+
+refreshBtn.addEventListener('click', fetchFromSheet);
+uploadFallbackBtn.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  try {
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type: 'array' });
+    const sheet = wb.Sheets['draws'] || wb.Sheets[wb.SheetNames[0]];
+    if (!sheet) throw new Error('No sheet found in workbook');
+    const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+    if (!rows.length) throw new Error('Sheet is empty');
+    ingestRows(rows);
+  } catch (err) {
+    alert('Error loading file: ' + err.message);
+  } finally {
+    fileInput.value = '';
+  }
+});
+
+/* ============================================================
+   DATA STATUS BAR
+   ============================================================ */
+function getDataTier(n) {
+  if (n < 31)   return { tier: 'insufficient', label: 'INSUFFICIENT', bars: 1, msg: 'Sample size is too small for any meaningful signal. Predictions are essentially random.' };
+  if (n < 101)  return { tier: 'very-limited', label: 'VERY LIMITED', bars: 2, msg: 'Patterns may begin to emerge but are not yet reliable.' };
+  if (n < 366)  return { tier: 'limited',      label: 'LIMITED',      bars: 3, msg: 'Statistical analysis becomes more interpretable, but the random nature of draws still dominates.' };
+  if (n < 1001) return { tier: 'adequate',     label: 'ADEQUATE',     bars: 4, msg: 'Enough data for confident statistical analysis. Reminder: each draw is still independent.' };
+  return                { tier: 'good',        label: 'GOOD',         bars: 5, msg: 'Large dataset. Statistical patterns are now well-characterized — though lottery draws remain independent random events.' };
+}
+
+function updateDataStatus(invalidCount) {
+  const n = state.draws.length;
+  const countEl = document.getElementById('datasetCount');
+  const msgEl   = document.getElementById('statusMessage');
+  const strRow  = document.getElementById('strengthRow');
+  const strBars = document.getElementById('strengthBars');
+  const strLbl  = document.getElementById('strengthLabel');
+
+  if (n === 0) {
+    countEl.textContent = 'No data loaded';
+    strRow.style.display = 'none';
+    return;
+  }
+
+  const tier = getDataTier(n);
+  const first = state.draws[0].lotto_date;
+  const last  = state.draws[n-1].lotto_date;
+
+  countEl.textContent = `${n} draws (${first} → ${last})`;
+  msgEl.innerHTML = tier.msg + (invalidCount ? ` <em>(${invalidCount} rows skipped as invalid)</em>` : '');
+
+  strRow.style.display = 'flex';
+  strRow.className = 'data-status-strength tier-' + tier.tier;
+  strBars.innerHTML = '';
+  for (let i = 0; i < 5; i++) {
+    const bar = document.createElement('div');
+    bar.className = 'strength-bar' + (i < tier.bars ? ' on' : '');
+    strBars.appendChild(bar);
+  }
+  strLbl.textContent = tier.label;
+}
+
+/* ============================================================
+   PRESETS & SLIDERS
+   ============================================================ */
+const wFreq   = document.getElementById('wFreq');
+const wGap    = document.getElementById('wGap');
+const wMarkov = document.getElementById('wMarkov');
+const wFreqVal   = document.getElementById('wFreqVal');
+const wGapVal    = document.getElementById('wGapVal');
+const wMarkovVal = document.getElementById('wMarkovVal');
+const presetActive = document.getElementById('presetActive');
+
+function applyPreset(name) {
+  state.activePreset = name;
+  document.querySelectorAll('.preset-chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.preset === name)
+  );
+  presetActive.textContent = name.toUpperCase();
+  if (name !== 'custom') {
+    const w = PRESETS[name];
+    state.weights = { ...w };
+    wFreq.value   = Math.round(w.freq * 100);
+    wGap.value    = Math.round(w.gap * 100);
+    wMarkov.value = Math.round(w.markov * 100);
+    updateSliderLabels();
+  }
+  renderPredictions();
+}
+
+function updateSliderLabels() {
+  const f = +wFreq.value, g = +wGap.value, m = +wMarkov.value;
+  const total = f + g + m || 1;
+  wFreqVal.textContent   = Math.round(f / total * 100) + '%';
+  wGapVal.textContent    = Math.round(g / total * 100) + '%';
+  wMarkovVal.textContent = Math.round(m / total * 100) + '%';
+}
+
+function onSliderChange() {
+  const f = +wFreq.value, g = +wGap.value, m = +wMarkov.value;
+  const total = f + g + m || 1;
+  state.weights = { freq: f/total, gap: g/total, markov: m/total };
+  state.activePreset = 'custom';
+  document.querySelectorAll('.preset-chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.preset === 'custom')
+  );
+  presetActive.textContent = 'CUSTOM';
+  updateSliderLabels();
+  renderPredictions();
+}
+
+document.querySelectorAll('.preset-chip').forEach(c => {
+  c.addEventListener('click', () => applyPreset(c.dataset.preset));
+});
+
+[wFreq, wGap, wMarkov].forEach(s => s.addEventListener('input', onSliderChange));
+
+document.getElementById('weightsToggle').addEventListener('click', (e) => {
+  e.target.classList.toggle('open');
+  document.getElementById('weightsPanel').classList.toggle('open');
+});
+
+/* ============================================================
+   PREDICTION MATH
+   ============================================================ */
+
+// z-score normalize an array of numbers
+function zScore(arr) {
+  const n = arr.length;
+  if (n === 0) return [];
+  const mean = arr.reduce((a,b) => a+b, 0) / n;
+  const variance = arr.reduce((s,x) => s + (x-mean)*(x-mean), 0) / n;
+  const std = Math.sqrt(variance) || 1;
+  return arr.map(x => (x - mean) / std);
+}
+
+// softmax over scores -> probabilities
+function softmax(arr, temperature = 1.0) {
+  if (arr.length === 0) return [];
+  const T = temperature;
+  const max = Math.max(...arr);
+  const exps = arr.map(x => Math.exp((x - max) / T));
+  const sum = exps.reduce((a,b) => a+b, 0) || 1;
+  return exps.map(e => e / sum);
+}
+
+/**
+ * Compute predictions for one category.
+ *
+ * Returns top-N candidates with probability % and per-method breakdown.
+ *
+ * The "right" baseline is uniform (1/space). We rank candidates by how
+ * much each signal deviates from that baseline, blend with user weights,
+ * then softmax for presentation. The softmax temperature is tuned so the
+ * spread between top picks is honest — usually within 1-3 percentage
+ * points of each other in the absolute numbers.
+ */
+function predictCategory(category) {
+  const draws = state.draws;
+  if (draws.length === 0) return null;
+
+  const key = category.key;
+  const space = category.space;
+
+  // 1. FREQUENCY: count of each observed candidate
+  const freqMap = new Map();
+  draws.forEach(d => {
+    const v = d[key];
+    freqMap.set(v, (freqMap.get(v) || 0) + 1);
+  });
+
+  // 2. GAP: draws since last appearance (for observed candidates)
+  const lastSeenIdx = new Map();
+  draws.forEach((d, i) => { lastSeenIdx.set(d[key], i); });
+  const lastIdx = draws.length - 1;
+
+  // 3. MARKOV: P(c | last digit5 last-2). We use last 2 digits of digit5 as the
+  // "state" — captures some recency context without exploding the state space.
+  // Transitions: state_t -> next-draw's `key` value.
+  const markovMap = new Map(); // state -> Map(value -> count)
+  for (let i = 0; i < draws.length - 1; i++) {
+    const stateKey = draws[i].digit2_top; // 100 states
+    const nextVal = draws[i+1][key];
+    if (!markovMap.has(stateKey)) markovMap.set(stateKey, new Map());
+    const inner = markovMap.get(stateKey);
+    inner.set(nextVal, (inner.get(nextVal) || 0) + 1);
+  }
+  const lastState = draws[lastIdx].digit2_top;
+  const markovTransitions = markovMap.get(lastState) || new Map();
+  const markovTotal = Array.from(markovTransitions.values()).reduce((a,b) => a+b, 0);
+
+  // Candidate pool: union of observed values + a smattering of unseen to keep
+  // the math honest. For practical purposes we only score observed values plus
+  // overdue ones; unseen values get a baseline score equal to mean.
+  const observed = Array.from(freqMap.keys());
+
+  // For digit2 categories (small space=100), score all 100 candidates.
+  // For larger spaces, only score observed (otherwise top-5 is meaningless
+  // because we lack data on the rest).
+  let candidates;
+  if (space <= 1000) {
+    candidates = [];
+    const pad = String(space - 1).length;
+    for (let i = 0; i < space; i++) candidates.push(String(i).padStart(pad, '0'));
+  } else {
+    candidates = observed.slice();
+  }
+
+  // Build raw signal arrays aligned with candidates[]
+  const rawFreq = candidates.map(c => (freqMap.get(c) || 0) / draws.length);
+  const expectedGap = space; // expected interval = state space size
+  const rawGap = candidates.map(c => {
+    const li = lastSeenIdx.has(c) ? lastSeenIdx.get(c) : -1;
+    const gap = li < 0 ? draws.length : (lastIdx - li);
+    return (gap - expectedGap) / expectedGap; // positive = overdue
+  });
+  const rawMarkov = candidates.map(c => {
+    if (markovTotal === 0) return 1 / space;
+    return (markovTransitions.get(c) || 0) / markovTotal;
+  });
+
+  // Z-score each signal so they are comparable
+  const zF = zScore(rawFreq);
+  const zG = zScore(rawGap);
+  const zM = zScore(rawMarkov);
+
+  // Combine
+  const { freq: wf, gap: wg, markov: wm } = state.weights;
+  const scores = candidates.map((_, i) => wf*zF[i] + wg*zG[i] + wm*zM[i]);
+
+  // Softmax with high temperature to keep probabilities honest (spread small)
+  // Higher T = flatter distribution = more honest about the noise floor.
+  const probs = softmax(scores, 1.5);
+
+  // Build result rows
+  const rows = candidates.map((c, i) => ({
+    value: c,
+    prob: probs[i],
+    freq: rawFreq[i],
+    gap: rawGap[i],
+    markov: rawMarkov[i],
+    appearances: freqMap.get(c) || 0,
+    lastSeen: lastSeenIdx.has(c)
+      ? draws[lastSeenIdx.get(c)].lotto_date
+      : 'never',
+    daysSince: lastSeenIdx.has(c) ? (lastIdx - lastSeenIdx.get(c)) : null,
+  }));
+
+  rows.sort((a, b) => b.prob - a.prob);
+  return rows.slice(0, 5);
+}
+
+/* ============================================================
+   PREDICT TAB RENDER
+   ============================================================ */
+function renderPredictions() {
+  const container = document.getElementById('predictions');
+  if (state.draws.length === 0) {
+    container.innerHTML = '<div class="pred-empty"><div class="pred-empty-icon">📂</div>Loading latest draws…</div>';
+    return;
+  }
+
+  let html = '';
+  for (const cat of CATEGORIES) {
+    const picks = predictCategory(cat);
+    if (!picks) continue;
+
+    html += `<div class="card">`;
+    html += `<div class="card-title">${cat.label}`;
+    if (cat.warn) html += `<span class="warn-tag">VERY HIGH NOISE</span>`;
+    else html += `<span class="card-title-tag">${cat.sub}</span>`;
+    html += `</div>`;
+
+    html += `<div class="pred-list">`;
+    picks.forEach((p, idx) => {
+      const pct = (p.prob * 100).toFixed(p.prob < 0.001 ? 4 : (p.prob < 0.01 ? 3 : 2));
+      html += `
+        <div class="pred-row ${idx === 0 ? 'top-1' : ''}" data-cat="${cat.key}" data-idx="${idx}">
+          <span class="pred-rank">#${idx+1}</span>
+          <span class="pred-number">${p.value}</span>
+          <span class="pred-prob">${pct}%</span>
+        </div>
+        <div class="pred-detail" id="detail-${cat.key}-${idx}">
+          <div class="pred-detail-row"><span>Appearances</span><span>${p.appearances} / ${state.draws.length}</span></div>
+          <div class="pred-detail-row"><span>Last seen</span><span>${p.lastSeen}${p.daysSince !== null ? ` (${p.daysSince}d ago)` : ''}</span></div>
+          <div class="pred-detail-row"><span>Freq signal</span><span>${(p.freq*100).toFixed(2)}%</span></div>
+          <div class="pred-detail-row"><span>Gap signal</span><span>${p.gap.toFixed(2)}σ overdue</span></div>
+          <div class="pred-detail-row"><span>Markov signal</span><span>${(p.markov*100).toFixed(2)}%</span></div>
+        </div>
+      `;
+    });
+    html += `</div></div>`;
+  }
+  container.innerHTML = html;
+
+  // Wire up detail toggles
+  container.querySelectorAll('.pred-row').forEach(row => {
+    row.addEventListener('click', () => {
+      const cat = row.dataset.cat, idx = row.dataset.idx;
+      document.getElementById(`detail-${cat}-${idx}`).classList.toggle('open');
+    });
+  });
+}
+
+/* ============================================================
+   HISTORY TAB RENDER
+   ============================================================ */
+const historySearch = document.getElementById('historySearch');
+historySearch.addEventListener('input', () => {
+  state.history.search = historySearch.value.trim().toLowerCase();
+  state.history.page = 1;
+  renderHistory();
+});
+
+function renderHistory() {
+  const container = document.getElementById('historyContent');
+  if (state.draws.length === 0) {
+    container.innerHTML = '<div class="pred-empty"><div class="pred-empty-icon">📊</div>Loading latest draws…</div>';
+    return;
+  }
+
+  // Filter: most recent first
+  const all = state.draws.slice().reverse();
+  const q = state.history.search;
+  const filtered = q
+    ? all.filter(d =>
+        d.lotto_date.includes(q) ||
+        d.digit5.includes(q) ||
+        d.digit2_top.includes(q) ||
+        d.digit2_bottom.includes(q)
+      )
+    : all;
+
+  const { page, pageSize } = state.history;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const start = (page - 1) * pageSize;
+  const slice = filtered.slice(start, start + pageSize);
+
+  let html = `
+    <table class="history-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>digit5</th>
+          <th>bottom</th>
+          <th>top</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+  for (const d of slice) {
+    html += `
+      <tr>
+        <td>${d.lotto_date}</td>
+        <td class="col-d5">${d.digit5}</td>
+        <td>${d.digit2_bottom}</td>
+        <td>${d.digit2_top}</td>
+      </tr>
+    `;
+  }
+  html += `</tbody></table>`;
+  html += `
+    <div class="pagination">
+      <button class="page-btn" id="prevPage" ${page === 1 ? 'disabled' : ''}>◀ Prev</button>
+      <span class="page-info">Page ${page} of ${totalPages}  ·  ${filtered.length} draws</span>
+      <button class="page-btn" id="nextPage" ${page === totalPages ? 'disabled' : ''}>Next ▶</button>
+    </div>
+  `;
+  container.innerHTML = html;
+
+  const prev = document.getElementById('prevPage');
+  const next = document.getElementById('nextPage');
+  if (prev) prev.addEventListener('click', () => { if (state.history.page > 1) { state.history.page--; renderHistory(); }});
+  if (next) next.addEventListener('click', () => { if (state.history.page < totalPages) { state.history.page++; renderHistory(); }});
+}
+
+/* ============================================================
+   STATS TAB RENDER
+   ============================================================ */
+function renderStats() {
+  const container = document.getElementById('statsContent');
+  if (state.draws.length === 0) {
+    container.innerHTML = '<div class="card"><div class="pred-empty"><div class="pred-empty-icon">📈</div>Loading latest draws…</div></div>';
+    return;
+  }
+
+  const draws = state.draws;
+  const n = draws.length;
+  const first = draws[0].lotto_date;
+  const last  = draws[n-1].lotto_date;
+
+  // Digit-position heatmap: for each position (0..4), count each digit (0..9)
+  const positionCounts = [0,1,2,3,4].map(() => new Array(10).fill(0));
+  for (const d of draws) {
+    for (let p = 0; p < 5; p++) {
+      const digit = parseInt(d.digit5[p], 10);
+      positionCounts[p][digit]++;
+    }
+  }
+
+  // Hot/cold for top2 and bottom2
+  const top2Counts = new Map();
+  const bot2Counts = new Map();
+  for (const d of draws) {
+    top2Counts.set(d.digit2_top, (top2Counts.get(d.digit2_top) || 0) + 1);
+    bot2Counts.set(d.digit2_bottom, (bot2Counts.get(d.digit2_bottom) || 0) + 1);
+  }
+
+  const sortedTop = Array.from(top2Counts.entries()).sort((a,b) => b[1] - a[1]);
+  const sortedBot = Array.from(bot2Counts.entries()).sort((a,b) => b[1] - a[1]);
+  const hotTop = sortedTop.slice(0, 5);
+  const coldTop = sortedTop.slice(-5).reverse();
+  const hotBot = sortedBot.slice(0, 5);
+  const coldBot = sortedBot.slice(-5).reverse();
+
+  // Date span and gaps
+  const dateFrom = new Date(first), dateTo = new Date(last);
+  const spanDays = Math.round((dateTo - dateFrom) / 86400000) + 1;
+  const missing = spanDays - n;
+  const coverage = spanDays > 0 ? Math.round((n/spanDays)*1000)/10 : 0;
+
+  // Heatmap color (intensity)
+  const maxCount = Math.max(...positionCounts.flat(), 1);
+  const colorFor = (c) => {
+    const t = c / maxCount; // 0..1
+    // Blend between bg-elev-2 and primary using opacity
+    return `background: rgba(240, 185, 11, ${0.05 + t * 0.55});`;
+  };
+
+  let html = '';
+
+  // Summary tiles
+  html += `<div class="card">`;
+  html += `<div class="card-title">Dataset Health</div>`;
+  html += `<div class="stat-grid">`;
+  html += `<div class="stat-tile"><div class="stat-tile-label">Total draws</div><div class="stat-tile-value">${n}</div></div>`;
+  html += `<div class="stat-tile"><div class="stat-tile-label">Span (days)</div><div class="stat-tile-value">${spanDays}</div></div>`;
+  html += `<div class="stat-tile"><div class="stat-tile-label">Missing</div><div class="stat-tile-value">${missing}</div><div class="stat-tile-sub">${(100-coverage).toFixed(1)}% gap</div></div>`;
+  html += `<div class="stat-tile"><div class="stat-tile-label">Coverage</div><div class="stat-tile-value">${coverage}%</div></div>`;
+  html += `</div>`;
+  html += `<div style="font-size:11px;color:var(--text-dim);margin-top:6px;font-family:'JetBrains Mono',monospace;">Range: ${first} → ${last}</div>`;
+  html += `</div>`;
+
+  // Heatmap
+  html += `<div class="card">`;
+  html += `<div class="card-title">Digit Frequency by Position</div>`;
+  html += `<div class="heatmap-grid">`;
+  html += `<div class="heatmap-header"></div>`;
+  for (let i = 0; i < 10; i++) html += `<div class="heatmap-header">${i}</div>`;
+  for (let p = 0; p < 5; p++) {
+    html += `<div class="heatmap-row-label">P${p+1}</div>`;
+    for (let d = 0; d < 10; d++) {
+      const c = positionCounts[p][d];
+      html += `<div class="heatmap-cell" style="${colorFor(c)}">${c}</div>`;
+    }
+  }
+  html += `</div>`;
+  html += `<div style="font-size:10px;color:var(--text-dim);margin-top:8px;">P1=leftmost digit ... P5=rightmost digit. Darker = appears more often.</div>`;
+  html += `</div>`;
+
+  // Hot/cold top2
+  html += `<div class="card">`;
+  html += `<div class="card-title">digit2_top — Hot & Cold</div>`;
+  html += `<div class="stat-grid">`;
+  html += `<div><div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:0.08em;margin-bottom:6px;">HOT</div><div class="hc-list">`;
+  hotTop.forEach(([v,c]) => {
+    html += `<div class="hc-row hot"><span class="hc-num">${v}</span><span class="hc-meta">${c}×</span></div>`;
+  });
+  html += `</div></div>`;
+  html += `<div><div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:0.08em;margin-bottom:6px;">COLD</div><div class="hc-list">`;
+  coldTop.forEach(([v,c]) => {
+    html += `<div class="hc-row cold"><span class="hc-num">${v}</span><span class="hc-meta">${c}×</span></div>`;
+  });
+  html += `</div></div>`;
+  html += `</div></div>`;
+
+  // Hot/cold bottom2
+  html += `<div class="card">`;
+  html += `<div class="card-title">digit2_bottom — Hot & Cold</div>`;
+  html += `<div class="stat-grid">`;
+  html += `<div><div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:0.08em;margin-bottom:6px;">HOT</div><div class="hc-list">`;
+  hotBot.forEach(([v,c]) => {
+    html += `<div class="hc-row hot"><span class="hc-num">${v}</span><span class="hc-meta">${c}×</span></div>`;
+  });
+  html += `</div></div>`;
+  html += `<div><div style="font-size:9px;color:var(--text-dim);font-weight:700;letter-spacing:0.08em;margin-bottom:6px;">COLD</div><div class="hc-list">`;
+  coldBot.forEach(([v,c]) => {
+    html += `<div class="hc-row cold"><span class="hc-num">${v}</span><span class="hc-meta">${c}×</span></div>`;
+  });
+  html += `</div></div>`;
+  html += `</div></div>`;
+
+  container.innerHTML = html;
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+updateSliderLabels();
+fetchFromSheet();   // auto-load live data from Google Sheet on open
+</script>
+
+</body>
+</html>
